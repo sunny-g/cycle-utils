@@ -1,0 +1,8 @@
+.DS_Store
+./**/.DS_Store
+.idea/
+
+cycle-recompose.sublime-project
+cycle-recompose.sublime-workspace
+dist/
+node_modules/

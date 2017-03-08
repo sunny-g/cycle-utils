@@ -1,0 +1,13 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+
+    "allowJs": false,
+    "alwaysStrict": true,
+    "listEmittedFiles": true,
+    "listFiles": true,
+    "sourceMap": true
+  }
+}
