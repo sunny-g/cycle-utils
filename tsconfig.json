@@ -1,13 +1,21 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "target": "es5",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist/es2015",
 
-    "allowJs": false,
-    "alwaysStrict": true,
-    "listEmittedFiles": true,
-    "listFiles": true,
-    "sourceMap": true
-  }
+    "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true
+  },
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "example",
+    "test"
+  ]
 }

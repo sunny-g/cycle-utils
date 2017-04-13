@@ -1,21 +1,21 @@
-import props from 'ramda/src/props';
-import { HigherOrderComponent } from './types';
+import { pluckSources } from './util';
+import { HigherOrderComponent } from './interfaces';
 
-export interface SourcesMapper<T> {
-  (...sources: T[]): { [name: string]: T };
+export interface SourcesMapper {
+  (...sources: any[]): { [sourceName: string]: any };
 }
 
-export interface MapSources<T> {
+export interface MapSources {
   ( sourceNames: string | string[],
-    mapper: SourcesMapper<T> ): HigherOrderComponent<T>;
+    mapper: SourcesMapper ): HigherOrderComponent;
 }
 
-const mapSources: MapSources<any> = (sourceNames, mapper) =>
+const mapSources: MapSources = (sourceNames, mapper) =>
   BaseComponent =>
     sources =>
       BaseComponent({
         ...sources,
-        ...mapper(...(props([].concat(sourceNames), sources))),
+        ...mapper(...pluckSources(sourceNames, sources)),
       });
 
 export default mapSources;

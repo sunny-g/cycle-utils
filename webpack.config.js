@@ -1,9 +1,46 @@
+const path = require('path');
+const SRC_DIR = path.resolve(__dirname, 'src');
+const DIST_DIR = path.resolve(__dirname, 'dist');
+const EXAMPLE_DIR = path.resolve(__dirname, 'example');
+const libraryName = 'CycleUtils';
+
+const babelLoader = {
+  loader: 'babel-loader',
+  options: {
+    presets: [
+      [ 'es2015', { modules: false } ],
+      'stage-0',
+    ],
+  },
+};
+const tsLoader = {
+  loader: 'ts-loader',
+  options: {
+    compilerOptions: {
+      declaration: false,
+      moduleResolution: 'node',
+      module: 'commonjs',
+      target: 'es5',
+    },
+  },
+};
+
 module.exports = {
-  entry: './src/index.js',
+  devServer: {
+    contentBase: EXAMPLE_DIR,
+    port: 8080,
+  },
+
+  entry: {
+    'cycle-utils': './src/index.ts',
+  },
 
   output: {
-    path: './dist',
-    filename: 'cycle-recompose.js',
+    path: DIST_DIR,
+    filename: '[name].js',
+    library: libraryName,
+    libraryTarget: 'umd',
+    umdNamedDefine: true,
   },
 
   resolve: {
@@ -14,34 +51,16 @@ module.exports = {
 
     rules: [{
       test: /\.ts/,
-      exclude: /node_modules/,
+      include: SRC_DIR,
       use: [
-        {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              [ 'es2015', { modules: false } ],
-              'stage-0',
-            ],
-          },
-        },
-        {
-          loader: 'ts-loader',
-        },
+        babelLoader,
+        tsLoader,
       ],
     }, {
       test: /\.js/,
-      exclude: /node_modules/,
+      include: SRC_DIR,
       use: [
-        {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              [ 'es2015', { modules: false } ],
-              'stage-0',
-            ],
-          },
-        },
+        babelLoader,
       ],
     }],
   },

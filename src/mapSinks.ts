@@ -1,23 +1,24 @@
-import props from 'ramda/src/props';
-import { HigherOrderComponent } from './types';
+import { pluckSinks } from './util';
+import { HigherOrderComponent } from './interfaces';
 
-export interface SinksMapper<T> {
-  (...sinks: T[]): { [name: string]: T };
+export interface SinksMapper {
+  (...sinks: any[]): { [sinkName: string]: any };
 }
 
-export interface MapSinks<T> {
+export interface MapSinks {
   ( sinkNames: string | string[],
-    mapper: SinksMapper<T> ): HigherOrderComponent<T>;
+    mapper: SinksMapper ): HigherOrderComponent;
 }
 
-const mapSinks: MapSinks<any> = (sinkNames, mapper) =>
+const mapSinks: MapSinks = (sinkNames, mapper) =>
   BaseComponent =>
     sources => {
       const sinks = BaseComponent(sources);
+      const sinksOfInterest = pluckSinks(sinkNames, sinks);
 
       return {
         ...sinks,
-        ...mapper(...props([].concat(sinkNames), sinks)),
+        ...mapper(...sinksOfInterest),
       };
     };
 

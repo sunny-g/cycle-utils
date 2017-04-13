@@ -1,16 +1,16 @@
 import compose from 'ramda/src/compose';
 import mapSources, { SourcesMapper } from './mapSources';
 import mapSinksWithSources, { SinksWithSourcesMapper } from './mapSinksWithSources';
-import { HigherOrderComponent } from './types';
+import { HigherOrderComponent } from './interfaces';
 
-export interface MapSourcesAndSinks<T> {
+export interface MapSourcesAndSinks {
   ( sourceNames: string | string[],
-    sourcesMapper: SourcesMapper<T>,
+    sourcesMapper: SourcesMapper,
     sinkNames: string | string[],
-    sinksMapper: SinksWithSourcesMapper<T> ): HigherOrderComponent<T>;
+    sinksMapper: SinksWithSourcesMapper ): HigherOrderComponent;
 }
 
-const mapSourcesAndSinks: MapSourcesAndSinks<any> =
+const mapSourcesAndSinks: MapSourcesAndSinks =
   (sourceNames, sourcesMapper, sinkNames, sinksMapper) =>
     compose(
       mapSources(sourceNames, sourcesMapper),
