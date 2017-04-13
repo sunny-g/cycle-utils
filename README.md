@@ -30,8 +30,8 @@ The following HOCs and utilities are provided by this library:
 * Higher-order components:
   * [`mapSources`](#mapsources)
   * [`mapSinks`](#mapsinks)
-  * [`mapSourcesAndSinks`](#mapsourcesandsinks)
   * [`mapSinksWithSources`](#mapsinkswithsources)
+  * [`mapSourcesAndSinks`](#mapsourcesandsinks)
 * Utilities:
   * [`combineSinks`](#combinesinks)
   * [`combineCycles`](#combinecycles)
@@ -44,16 +44,24 @@ mapSources(
 ): HigherOrderComponent
 ```
 
-HOC that applies the `sourceMapper` to `sources` *before* they've been passed into the `BaseComponent`
+HOC that applies the `sourceMapper` to `sources` *before* they've been passed into the `BaseComponent`.
 
 ##### parameters:
 * `sourceNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want to pass the entire `sources` object)
-* `sourceMapper: (Sources | ...Sources[]) => Sources`: Transform function to be applied to specified `sources`
+* `sourceMapper: (Sources | ...Sources[]) => Sources`: Transform function to be applied to specified `sources`; the returned `Sources` are merged into the original `Sources`
 
 Example:
 
 ```js
-blah();
+// adds a property to the `props` object provided by a fictional `props` source
+mapSources(
+  'props', (propsSource) => ({
+    props: propsSource.map(props => ({
+      ...props,
+      'newProp': 'newProp',
+    }),
+  })
+);
 ```
 
 ### `mapSinks()`
@@ -63,16 +71,55 @@ mapSinks(
   sinkMapper
 ): HigherOrderComponent
 ```
-HOC that applies the `sinkMapper` to `sinks` *after* they've been returned from the `BaseComponent`
+
+HOC that applies the `sinkMapper` to `sinks` *after* they've been returned from the `BaseComponent`.
 
 ##### parameters:
 * `sinkNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want to pass the entire `sinks` object)
-* `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`
+* `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`; the returned `Sinks` are merged into the original `Sinks`
 
 Example:
 
 ```js
-blah();
+// logs all emitted HTTP requests
+mapSinks(
+  'HTTP', (HTTPSink) => ({
+    HTTP: HTTPSink.debug('making an HTTP request'),
+  })
+);
+```
+
+### `mapSinksWithSources()`
+```
+mapSourcesAndSink(
+  sinkNames,
+  sourceNames,
+  sinkAndSourceMapper
+): HigherOrderComponent
+```
+
+HOC to transform a component's `sinks` with any desired `sources` *after* the `sinks` have been returned from the `BaseComponent`.
+
+##### parameters:
+* `sinkNames: '*' | string | string[]`: Sinks you want to transform (`'*'` if you want the entire `sinks` object)
+* `sourceNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sources` object)
+* `sinkAndSourceMapper: (Sinks | ...Sinks[], Sources | ...Sources[]) => Sinks`: Transform function to be applied to specified `sinks` and `sources`; the returned `Sinks` are merged into the original `Sinks`
+
+Example:
+
+```js
+// logs all emitted sinks values with the current props
+mapSinksWithSources(
+  '*', 'props', (sinks, propsSource) => {
+    return Object.keys(sinks)
+      .reduce((newSinks, sinkName) => ({
+        ...newSinks,
+        [sinkName]: sinks[sinkName]
+          .compose(sampleCombine(propsSource))
+          .debug('new sink emission with current props')
+      }), {});
+  }
+);
 ```
 
 ### `mapSourcesAndSinks()`
@@ -84,77 +131,91 @@ mapSourcesAndSink(
   sinkMapper
 ): HigherOrderComponent
 ```
-HOC to transform both a component's `sources` *before* entering the `BaseComponent` and a component's `sinks`*after* they've been returned from the `BaseComponent`
+
+HOC to transform both a component's `sources` *before* entering the `BaseComponent` and a component's `sinks`*after* they've been returned from the `BaseComponent`.
+
+Uses [`mapSources`](#mapsources) and [`mapSinksWithSources`](#mapsinkswithsources) under the hood, so the same requirements of those functions apply.
 
 ##### parameters:
 * `sourceNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sources` object)
-* `sourceMapper: (Sources | ...Sources[]) => Sources`: Transform function to be applied to specified `sources`
+* `sourceMapper: (Sources | ...Sources[]) => Sources`: Transform function to be applied to specified `sources`; the returned `Sources` are merged into the original `Sources`
 * `sinkNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sinks` object)
-* `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`
+* `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`; the returned `Sinks` are merged into the original `Sinks`
 
 Example:
 
 ```js
-blah();
+// TODO: ADD AN EXAMPLE HERE
 ```
 
-### `mapSinksWithSources()`
+### `combineSinks()`
 ```
-mapSourcesAndSink(
-  sinkNames,
-  sourceNames,
-  sinkAndSourceMapper
-): HigherOrderComponent
-```
-HOC to transform a component's `sinks` with any desired `sources` *after* the `sinks` have been returned from the `BaseComponent`
-
-##### parameters:
-* `sinkNames: '*' | string | string[]`: Sinks you want to transform (`'*'` if you want the entire `sinks` object)
-* `sourceNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sources` object)
-* `sinkAndSourceMapper: (Sinks | ...Sinks[], Sources | ...Sources[]) => Sinks`: Transform function to be applied to specified `sinks` and `sources`
-
-Example:
-
-```js
-blah();
+combineSinks(
+  combiners: { [sinkName: string]: sinkCombiner }
+): SinksCombiner
 ```
 
-### `combineSinks(combiners): SinksCombiner`
 Utility to declaratively combine multiple `Sinks` objects
 
 ##### parameters:
-* `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s
-  * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object (`undefined` if it doesn't exist) and should return a combined `Sink` stream
+* `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s for each `sinkName` to combine
+  * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object and should return a combined `Sink` stream
+  * **NOTE:** if the `sinkCombiner` for a given `sinkName` is missing and there are multiple `sinks` of that `sinkName`, the `sink`'s native `merge` function is applied to the list of `sinks`
 
 ##### returns:
-* `SinksCombiner: (...Sinks[]) => Sinks`: A function to apply to multiple `Sink` objects that:
-  1. groups all `Sinks` of the same `sinkName` into an array
-  2. applies each individual `sinkCombiner` to the destructured array of the `Sinks`
+* `SinksCombiner: (...Sinks[]) => Sinks`: A function to apply to multiple `Sinks` objects that:
+  1. groups all `Sink`s of the same `sinkName` into an array
+  2. applies each individual `sinkCombiner` to the destructured array of the `Sink`s
   3. creates and returns a new `Sinks` object from the combined `Sink`s.
 
 Example:
 
 ```js
-blah();
+const sinkCombiner = combineSinks({
+  HTTP: (...httpSinks) => xs.merge(...httpSinks),
+});
+
+// say we have multiple non-identical children component sinks
+// as well as the component's own sinks...
+
+const sinks = ...;
+const childOneSinks = childOne(sources);
+const childTwoSinks = childTwo(sources);
+
+return sinkCombiner(sinks, childOneSinks, childTwoSinks);
 ```
 
-### `combineCycles(combiners): CycleComponentFactory`
+### `combineCycles()`
+```
+combineCycles(
+  combiners: { [sinkName: string]: sinkCombiner },
+  ...BaseComponents: Component[]
+): CombinedComponent
+```
+
 Utility to declaratively combine multiple Cycle components into a single Cycle component
 
 ##### parameters:
-* `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s
-  * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object (`undefined` if it doesn't exist) and should return a combined `Sink` stream
+* `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s for each `sinkName` to combine
+  * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object and should return a combined `Sink` stream
+  * **NOTE:** if the `sinkCombiner` for a given `sinkName` is missing and there are multiple `sinks` of that `sinkName`, the `sink`'s native `merge` function is applied to the list of `sinks`
+* `...BaseComponents: Component[]`: The desired Cycle.js components to combine into a single component
 
 ##### returns:
-* `CycleComponentFactory: (...CycleComponents[]) => CombinedCycleComponent`: Uses the `combiners` to create a `CombinedCycleComponent`
-  * `CombinedCycleComponent: (Sources | ...Sources[]) => Sinks`: An otherwise normal Cycle.js component that takes in either:
-     * a single `Sources` object to be passed into each original `CycleComponent`
-     * an array of `Sources` objects to be passed into the original `CycleComponent` by index
+* `CombinedComponent: (Sources | ...Sources[]) => Sinks`: An otherwise normal Cycle.js component that differs from traditional components in that it takes in **either**:
+  * a single `Sources` object to be passed into each `BaseComponent`
+  * an list of `Sources` objects, each one passed into the corresponding `BaseComponent` by index
 
 Example:
 
 ```js
-blah();
+// assume the same `childOne` and `childTwo` components from the previous example
+
+const ChildrenComponent = CompositeComponent({
+  HTTP: (...httpSinks) => xs.merge(...httpSinks),
+}, childOne, childTwo);
+
+const childrenSinks = ChildrenComponent(sources);
 ```
 
 
