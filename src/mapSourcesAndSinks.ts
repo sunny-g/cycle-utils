@@ -1,6 +1,7 @@
 import compose from 'ramda/src/compose';
-import mapSources, { SourcesMapper } from './mapSources';
-import mapSinksWithSources, { SinksWithSourcesMapper } from './mapSinksWithSources';
+import { SourcesMapper } from './mapSources';
+import { SinksWithSourcesMapper } from './mapSinksWithSources';
+import { pluckSources, pluckSinks } from './util';
 import { HigherOrderComponent } from './interfaces';
 
 export interface MapSourcesAndSinks {
@@ -12,9 +13,21 @@ export interface MapSourcesAndSinks {
 
 const mapSourcesAndSinks: MapSourcesAndSinks =
   (sourceNames, sourcesMapper, sinkNames, sinksMapper) =>
-    compose(
-      mapSources(sourceNames, sourcesMapper),
-      mapSinksWithSources(sinkNames, sourceNames, sinksMapper)
-    );
+    BaseComponent =>
+      sources => {
+        const sourcesOfInterest = pluckSources(sourceNames, sources);
+        const newSources = {
+          ...sources,
+          ...sourcesMapper(...sourcesOfInterest),
+        };
+
+        const sinks = BaseComponent(newSources);
+        const sinksOfInterest = pluckSinks(sinkNames, sinks);
+
+        return {
+          ...sinks,
+          ...sinksMapper(...sinksOfInterest, newSources),
+        };
+      }
 
 export default mapSourcesAndSinks;

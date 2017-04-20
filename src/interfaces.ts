@@ -13,9 +13,7 @@ export type Component = {
 export interface HigherOrderComponent {
   (BaseComponent: Component): Component;
 }
-export type HOC = HigherOrderComponent;
 
 export interface HigherOrderComponentFactory {
   (...args: any[]): HigherOrderComponent;
 }
-export type HOCFactory = HigherOrderComponentFactory;

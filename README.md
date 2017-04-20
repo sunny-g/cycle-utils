@@ -53,15 +53,24 @@ HOC that applies the `sourceMapper` to `sources` *before* they've been passed in
 Example:
 
 ```js
-// adds a property to the `props` object provided by a fictional `props` source
-mapSources(
-  'props', (propsSource) => ({
-    props: propsSource.map(props => ({
-      ...props,
-      'newProp': 'newProp',
-    }),
-  })
+// adds a fetched property to the `props` object provided by a fictional `props` source
+const withNewProps = mapSources(
+  [ 'props', 'HTTP' ], (propsSource, HTTP) => {
+    const newProp = HTTP
+      .select('newProp')
+      .flatten();
+
+    const newPropsSource = combine(propsSource, newProp)
+      .map(([ props, newProp ]) => ({
+        ...props,
+        'newProp': newProp,
+      });
+
+    return { props: newPropsSource };
+  }
 );
+
+const ComponentWithProps = withNewProps(Component);
 ```
 
 ### `mapSinks()`
@@ -82,11 +91,13 @@ Example:
 
 ```js
 // logs all emitted HTTP requests
-mapSinks(
+const logHTTPSink = mapSinks(
   'HTTP', (HTTPSink) => ({
     HTTP: HTTPSink.debug('making an HTTP request'),
   })
 );
+
+const ComponentWithLoggedHTTPSink = logHTTPSink(Component);
 ```
 
 ### `mapSinksWithSources()`
@@ -109,7 +120,7 @@ Example:
 
 ```js
 // logs all emitted sinks values with the current props
-mapSinksWithSources(
+const logAllSinks = mapSinksWithSources(
   '*', 'props', (sinks, propsSource) => {
     return Object.keys(sinks)
       .reduce((newSinks, sinkName) => ({
@@ -120,6 +131,8 @@ mapSinksWithSources(
       }), {});
   }
 );
+
+const ComponentWithLoggedSinksWithProps = logAllSinks(Component);
 ```
 
 ### `mapSourcesAndSinks()`
@@ -211,7 +224,7 @@ Example:
 ```js
 // assume the same `childOne` and `childTwo` components from the previous example
 
-const ChildrenComponent = CompositeComponent({
+const ChildrenComponent = combineCycles({
   HTTP: (...httpSinks) => xs.merge(...httpSinks),
 }, childOne, childTwo);
 
