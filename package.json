@@ -25,8 +25,9 @@
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch",
-    "prepublish": "tsc && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublish": "npm test && tsc && npm run build",
+    "test": "jest",
+    "test:watch": "npm test -- --watch"
   },
   "babel": {
     "env": {

@@ -1,9 +1,11 @@
 import combineSinks, { Combiners } from './combineSinks';
-import head from './util';
+import { head } from './util';
 import { Component } from './interfaces';
 
 export interface CombineCycles {
-  (combiners: Combiners): Component;
+  ( combiners: Combiners,
+    ...BaseComponents: Component[],
+  ): Component;
 }
 
 /**
@@ -12,7 +14,7 @@ export interface CombineCycles {
  *   - apply it to the current sources
  *   - return a single sink or array of sinks for each key in the set of sink keys
  */
-const combineCycles = (combiners = {}, ...BaseComponents) => {
+const combineCycles: CombineCycles = (combiners = {}, ...BaseComponents) => {
   const sinkCombiner = combineSinks(combiners);
 
   return function CompositeComponent(...sources) {
