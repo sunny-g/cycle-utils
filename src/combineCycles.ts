@@ -1,5 +1,5 @@
-import head from 'ramda/src/head';
 import combineSinks, { Combiners } from './combineSinks';
+import head from './util';
 import { Component } from './interfaces';
 
 export interface CombineCycles {

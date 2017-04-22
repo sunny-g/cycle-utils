@@ -184,16 +184,33 @@ Utility to declaratively combine multiple `Sinks` objects
 Example:
 
 ```js
-const sinkCombiner = combineSinks({
-  HTTP: (...httpSinks) => xs.merge(...httpSinks),
-});
-
 // say we have multiple non-identical children component sinks
 // as well as the component's own sinks...
 
-const sinks = ...;
+// has only a DOM sink
+const sinks = { DOM: ... };
+// each has both DOM and HTTP sinks
 const childOneSinks = childOne(sources);
 const childTwoSinks = childTwo(sources);
+
+const sinkCombiner = combineSinks({
+  // some drivers only require a merge of their sinks
+    // combineSinks merges by default, but is shown here
+  HTTP: (childOneHTTP, childTwoHTTP) => xs.merge(childOneHTTP, childTwoHTTP),
+
+  // some sinks require custom merging/combining...
+  DOM: (mainDOM$, childOneDOM$, childTwoDOM$) => xs
+    .combine(mainDOM$, childOneDOM$, childTwoDOM$)
+    .map(([ mainDOM, childOneDOM, childTwoDOM ]) =>
+      div([
+        mainDOM,
+        div([
+          childOneDOM,
+          childTwoDOM,
+        ])
+      ])
+    ),
+});
 
 return sinkCombiner(sinks, childOneSinks, childTwoSinks);
 ```
@@ -226,11 +243,54 @@ Example:
 
 const ChildrenComponent = combineCycles({
   HTTP: (...httpSinks) => xs.merge(...httpSinks),
+  DOM: (childOneDOM$, childTwoDOM$) => xs
+    .combine(childOneDOM$, childTwoDOM$)
+    .map(([ childOneDOM, childTwoDOM ]) =>
+      div([
+        childOneDOM,
+        childTwoDOM,
+      ])
+    ),
 }, childOne, childTwo);
 
 const childrenSinks = ChildrenComponent(sources);
 ```
 
+Another useful example is for chaining tasks together in a more linear format:
+
+```js
+// the first task, makes a request
+const task1 = _ => ({
+  HTTP: of({
+    url: 'google.com',
+    category: 'req1',
+  }),
+});
+
+// the second task
+// maps the response of the first task's request into the response sink of the second task
+const task2 = ({ HTTP }) => ({
+  HTTP: HTTP
+    .select('req1')
+    .flatten()
+    .map(res => ({
+      url: `https://${res.text}`,
+      category: 'req2'
+    })),
+});
+
+function main(sources) {
+  // now, we can use the result of the tasks
+  const taskRes = sources.HTTP
+    .select('req2')
+    .flatten();
+
+  const Task = combineCycles({}, task1, task2);
+  const taskSinks = Task(sources);
+
+  // ... the rest of the component, returns main sinks merged with taskSinks
+}
+```
 
 ## contributing
 

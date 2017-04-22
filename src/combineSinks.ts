@@ -1,6 +1,4 @@
-import head from 'ramda/src/head';
-import tail from 'ramda/src/tail';
-import { mapObj } from './util';
+import { head, tail, mapObj } from './util';
 
 export type Combiners = {
   [sinkName: string]: (...sinks: any[]) => any;

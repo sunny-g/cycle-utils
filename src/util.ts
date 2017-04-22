@@ -11,6 +11,9 @@ export const pluckProps = (keyOrKeys: string | string[], obj = {}): any[] => {
 export const pluckSources = pluckProps;
 export const pluckSinks = pluckProps;
 
+export const head = arr => arr[0];
+export const tail = arr => arr.slice(1);
+
 // alt for ramda/src/mapObjIndexed
 export const mapObj = (valueKeyMapper) =>
   obj => Object
