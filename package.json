@@ -1,6 +1,6 @@
 {
   "name": "@sunny-g/cycle-utils",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Higher-order components and utilities for Cycle.js",
   "author": "Sunny G <sunny.gonna@gmail.com> (http://blog.sunnyg.io)",
   "homepage": "https://github.com/sunny-g/cycle-utils",

@@ -16,7 +16,7 @@ npm install --save @sunny-g/cycle-utils
 ```js
 import { mapSources } from '@sunny-g/cycle-utils';
 // or
-import mapSources from '@sunny-g/cycle-utils/dist/es2015/mapSources';
+import mapSources from '@sunny-g/cycle-utils/es2015/mapSources';
 ```
 
 ## api

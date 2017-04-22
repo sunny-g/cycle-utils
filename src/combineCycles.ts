@@ -1,11 +1,15 @@
 import combineSinks, { Combiners } from './combineSinks';
 import { head } from './util';
-import { Component } from './interfaces';
+import { Sources, Sinks, Component } from './interfaces';
+
+export interface ICompositeComponent {
+  (...sources: Sources[]): Sinks;
+}
 
 export interface CombineCycles {
   ( combiners: Combiners,
     ...BaseComponents: Component[],
-  ): Component;
+  ): ICompositeComponent;
 }
 
 /**
