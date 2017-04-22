@@ -1,17 +1,18 @@
 {
   "name": "@sunny-g/cycle-utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Higher-order components and utilities for Cycle.js",
   "author": "Sunny G <sunny.gonna@gmail.com> (http://blog.sunnyg.io)",
   "homepage": "https://github.com/sunny-g/cycle-utils",
   "repository": "https://github.com/sunny-g/cycle-utils",
   "bugs": "https://github.com/sunny-g/cycle-utils/issues",
   "license": "ISC",
-  "main": "dist/cycle-utils.js",
-  "module": "dist/es2015/index.js",
-  "types": "dist/es2015/index.d.ts",
+  "main": "commonjs/cycle-utils.js",
+  "module": "es2015/index.js",
+  "types": "es2015/index.d.ts",
   "files": [
-    "dist",
+    "commonjs/",
+    "es2015/",
     "src/"
   ],
   "keywords": [
