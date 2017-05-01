@@ -22,13 +22,14 @@ const mapSourcesAndSinks: MapSourcesAndSinks =
           throw new Error('Sources mapper must return a plain object');
         }
 
-        const sinks = BaseComponent({
+        const allSources = {
           ...sources,
           ...newSources,
-        });
+        };
+        const sinks = BaseComponent(allSources);
 
         const sinksOfInterest = pluckSinks(sinkNames, sinks);
-        const newSinks = sinksMapper(...sinksOfInterest, newSources);
+        const newSinks = sinksMapper(...sinksOfInterest, allSources);
 
         if (!isPlainObject(newSinks)) {
           throw new Error('Sinks mapper must return a plain object');
