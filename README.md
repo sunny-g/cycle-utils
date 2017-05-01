@@ -153,7 +153,7 @@ Uses [`mapSources`](#mapsources) and [`mapSinksWithSources`](#mapsinkswithsource
 * `sourceNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sources` object)
 * `sourceMapper: (Sources | ...Sources[]) => Sources`: Transform function to be applied to specified `sources`; the returned `Sources` are merged into the original `Sources`
 * `sinkNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want the entire `sinks` object)
-* `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`; the returned `Sinks` are merged into the original `Sinks`
+* `sinkMapper: (Sinks | ...Sinks[], Sources) => Sinks`: Transform function to be applied to specified `sinks` as well as the entire `sources` object; the returned `Sinks` are merged into the original `Sinks`
 
 Example:
 
@@ -188,7 +188,7 @@ Example:
 // as well as the component's own sinks...
 
 // has only a DOM sink
-const sinks = { DOM: ... };
+const mainSinks = { DOM: ... };
 // each has both DOM and HTTP sinks
 const childOneSinks = childOne(sources);
 const childTwoSinks = childTwo(sources);
@@ -196,6 +196,7 @@ const childTwoSinks = childTwo(sources);
 const sinkCombiner = combineSinks({
   // some drivers only require a merge of their sinks
     // combineSinks merges by default, but is shown here
+    // note that there is no placeholder argument for missing sinks (mainSinks has no HTTP sink)
   HTTP: (childOneHTTP, childTwoHTTP) => xs.merge(childOneHTTP, childTwoHTTP),
 
   // some sinks require custom merging/combining...
@@ -212,7 +213,7 @@ const sinkCombiner = combineSinks({
     ),
 });
 
-return sinkCombiner(sinks, childOneSinks, childTwoSinks);
+return sinkCombiner(mainSinks, childOneSinks, childTwoSinks);
 ```
 
 ### `combineCycles()`
@@ -228,7 +229,7 @@ Utility to declaratively combine multiple Cycle components into a single Cycle c
 ##### parameters:
 * `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s for each `sinkName` to combine
   * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object and should return a combined `Sink` stream
-  * **NOTE:** if the `sinkCombiner` for a given `sinkName` is missing and there are multiple `sinks` of that `sinkName`, the `sink`'s native `merge` function is applied to the list of `sinks`
+  * **NOTE:** if the `sinkCombiner` for a given `sinkName` is missing and there are multiple `sinks` of that `sinkName`, the first `sink`'s native `merge` operator is applied to the list of `sinks`
 * `...BaseComponents: Component[]`: The desired Cycle.js components to combine into a single component
 
 ##### returns:
@@ -262,7 +263,7 @@ Another useful example is for chaining tasks together in a more linear format:
 // the first task, makes a request
 const task1 = _ => ({
   HTTP: of({
-    url: 'google.com',
+    url: 'https://google.com',
     category: 'req1',
   }),
 });
@@ -273,22 +274,22 @@ const task2 = ({ HTTP }) => ({
   HTTP: HTTP
     .select('req1')
     .flatten()
-    .map(res => ({
-      url: `https://${res.text}`,
+    .map(res1 => ({
+      url: res1.url,
       category: 'req2'
     })),
 });
 
 function main(sources) {
+  const Task = combineCycles({}, task1, task2);
+  const taskSinks = Task(sources);
+
   // now, we can use the result of the tasks
   const taskRes = sources.HTTP
     .select('req2')
     .flatten();
 
-  const Task = combineCycles({}, task1, task2);
-  const taskSinks = Task(sources);
-
-  // ... the rest of the component, returns main sinks merged with taskSinks
+  // ... the rest of the component, returns main sinks merged with taskSinks...
 }
 ```
 
