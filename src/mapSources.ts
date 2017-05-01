@@ -1,4 +1,4 @@
-import { pluckSources } from './util';
+import { isPlainObject, pluckSources } from './util';
 import { HigherOrderComponent } from './interfaces';
 
 export interface SourcesMapper {
@@ -12,10 +12,17 @@ export interface MapSources {
 
 const mapSources: MapSources = (sourceNames, mapper) =>
   BaseComponent =>
-    sources =>
-      BaseComponent({
+    sources => {
+      const newSources = mapper(...pluckSources(sourceNames, sources));
+
+      if (!isPlainObject(newSources)) {
+        throw new Error('Sources mapper must return a plain object');
+      }
+
+      return BaseComponent({
         ...sources,
-        ...mapper(...pluckSources(sourceNames, sources)),
+        ...newSources,
       });
+    }
 
 export default mapSources;

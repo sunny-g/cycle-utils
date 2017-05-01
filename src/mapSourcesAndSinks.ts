@@ -1,7 +1,7 @@
 import compose from 'ramda/src/compose';
 import { SourcesMapper } from './mapSources';
 import { SinksWithSourcesMapper } from './mapSinksWithSources';
-import { pluckSources, pluckSinks } from './util';
+import { isPlainObject, pluckSources, pluckSinks } from './util';
 import { HigherOrderComponent } from './interfaces';
 
 export interface MapSourcesAndSinks {
@@ -16,17 +16,27 @@ const mapSourcesAndSinks: MapSourcesAndSinks =
     BaseComponent =>
       sources => {
         const sourcesOfInterest = pluckSources(sourceNames, sources);
-        const newSources = {
-          ...sources,
-          ...sourcesMapper(...sourcesOfInterest),
-        };
+        const newSources = sourcesMapper(...sourcesOfInterest);
 
-        const sinks = BaseComponent(newSources);
+        if (!isPlainObject(newSources)) {
+          throw new Error('Sources mapper must return a plain object');
+        }
+
+        const sinks = BaseComponent({
+          ...sources,
+          ...newSources,
+        });
+
         const sinksOfInterest = pluckSinks(sinkNames, sinks);
+        const newSinks = sinksMapper(...sinksOfInterest, newSources);
+
+        if (!isPlainObject(newSinks)) {
+          throw new Error('Sinks mapper must return a plain object');
+        }
 
         return {
           ...sinks,
-          ...sinksMapper(...sinksOfInterest, newSources),
+          ...newSinks,
         };
       }
 

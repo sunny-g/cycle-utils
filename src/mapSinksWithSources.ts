@@ -1,4 +1,4 @@
-import { pluckSources, pluckSinks } from './util';
+import { isPlainObject, pluckSources, pluckSinks } from './util';
 import { HigherOrderComponent } from './interfaces';
 
 export interface SinksWithSourcesMapper {
@@ -19,13 +19,18 @@ const mapSinksWithSources: MapSinksWithSources =
 
         const sourcesOfInterest = pluckSources(sourceNames, sources);
         const sinksOfInterest = pluckSinks(sinkNames, sinks);
+        const newSinks = mapper(
+          ...sinksOfInterest,
+          ...sourcesOfInterest,
+        );
+
+        if (!isPlainObject(newSinks)) {
+          throw new Error('Sinks mapper must return a plain object');
+        }
 
         return {
           ...sinks,
-          ...mapper(
-            ...sinksOfInterest,
-            ...sourcesOfInterest,
-          ),
+          ...newSinks,
         };
       };
 

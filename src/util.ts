@@ -1,4 +1,7 @@
 import props from 'ramda/src/props';
+const isPlainObject = require('is-plain-object');
+
+export { isPlainObject };
 
 // returns an array of properties from an obj or, if wildcard is passed, an array of the input obj
 export const pluckProps = (keyOrKeys: string | string[], obj = {}): any[] => {
