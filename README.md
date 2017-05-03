@@ -32,6 +32,7 @@ The following HOCs and utilities are provided by this library:
   * [`mapSinks`](#mapsinks)
   * [`mapSinksWithSources`](#mapsinkswithsources)
   * [`mapSourcesAndSinks`](#mapsourcesandsinks)
+  * [`isolate`](#isolate)
 * Utilities:
   * [`combineSinks`](#combinesinks)
   * [`combineCycles`](#combinecycles)
@@ -161,6 +162,28 @@ Example:
 // TODO: ADD AN EXAMPLE HERE
 ```
 
+### `isolate()`
+```
+isolate(
+  config: ((Sources: any) => null | string | {}) | null | string | {}
+): HigherOrderComponent
+```
+
+HOC version of `@cycle/isolate`.
+
+##### parameters:
+* `config: ((Sources: any) => null | string | {}) | null | string | {}`: Either `null`, a `string`, or an `object`, or a function that is given `sources` and returns `null`, a `string`, or an `object`
+
+Example:
+
+```js
+// any component wrapped with randomIsolation will receive a randomly-generated scope
+
+const randomIsolation = isolate(() => Math.random().toString());
+
+const NewComponent = randomIsolation(Component);
+```
+
 ### `combineSinks()`
 ```
 combineSinks(
@@ -172,7 +195,7 @@ Utility to declaratively combine multiple `Sinks` objects
 
 ##### parameters:
 * `combiners: { [sinkName: string]: sinkCombiner }`: Object of `sinkCombiner`s for each `sinkName` to combine
-  * each individual `sinkCombiner` has the signature `(...sinks) => sink` and is given each `Sink` from each passed-in `Sinks` object and should return a combined `Sink` stream
+  * each individual `sinkCombiner` has the signature `(...sink) => sink` and is given each `Sink` from each passed-in `Sinks` object and should return a combined `Sink` stream
   * **NOTE:** if the `sinkCombiner` for a given `sinkName` is missing and there are multiple `sinks` of that `sinkName`, the `sink`'s native `merge` function is applied to the list of `sinks`
 
 ##### returns:
