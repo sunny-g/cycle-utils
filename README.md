@@ -85,7 +85,7 @@ mapSinks(
 HOC that applies the `sinkMapper` to `sinks` *after* they've been returned from the `BaseComponent`.
 
 ##### parameters:
-* `sinkNames: '*' | string | string[]`: Sources you want to transform (`'*'` if you want to pass the entire `sinks` object)
+* `sinkNames: '*' | string | string[]`: Sinks you want to transform (`'*'` if you want to pass the entire `sinks` object)
 * `sinkMapper: (Sinks | ...Sinks[]) => Sinks`: Transform function to be applied to specified `sinks`; the returned `Sinks` are merged into the original `Sinks`
 
 Example:
